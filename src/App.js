@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import jsPDF from "jspdf";
 
-const supabase = createClient('https://hiahkvlgtvirlshxmqep.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYWhrdmxndHZpcmxzaHhtcWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzI5NjQsImV4cCI6MjA2NDYwODk2NH0.nelAKJvgXnmA5PO2-N48SE1pM9vaU-yYJGJVTNrIho4');
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_KEY
+);
+
 
 function App() {
   const [text, setText] = useState("");
