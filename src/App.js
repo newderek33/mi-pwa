@@ -60,27 +60,48 @@ function App() {
     }
   }
 
-  function generarPDF(record) {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Registro", 10, 20);
-    doc.text(`Texto: ${record.texto}`, 10, 40);
+ function generarPDF(record) {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Registro", 10, 20);
+  doc.text(`Texto: ${record.texto}`, 10, 40);
 
-    if (record.imagen) {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.onload = () => {
-        const ratio = img.width / img.height;
-        const width = 50;
-        const height = width / ratio;
-        doc.addImage(img, "PNG", 10, 50, width, height);
-        doc.save("registro.pdf");
-      };
-      img.src = record.imagen;
-    } else {
+  if (record.imagen) {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      // Crear un canvas para procesar la imagen
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      // Calcular dimensiones manteniendo proporción
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const maxWidth = pageWidth - margin * 2;
+      const maxHeight = pageHeight - 100;
+
+      let width = img.width;
+      let height = img.height;
+
+      const widthRatio = maxWidth / width;
+      const heightRatio = maxHeight / height;
+      const ratio = Math.min(widthRatio, heightRatio);
+
+      width = width * ratio;
+      height = height * ratio;
+
+      doc.addImage(canvas.toDataURL("image/png"), "PNG", margin, 50, width, height);
       doc.save("registro.pdf");
-    }
+    };
+    img.src = record.imagen;
+  } else {
+    doc.save("registro.pdf");
   }
+}
 
   return (
     <div className="p-4 max-w-xl mx-auto font-sans">
