@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import jsPDF from "jspdf";
 
-const [preview, setPreview] = useState(null);
-const [loading, setLoading] = useState(false);
-
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -16,6 +13,8 @@ function App() {
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [records, setRecords] = useState([]);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
