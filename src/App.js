@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import jsPDF from "jspdf";
 
+const [preview, setPreview] = useState(null);
+const [loading, setLoading] = useState(false);
+
+
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_KEY
@@ -22,31 +26,36 @@ function App() {
     if (!error) setRecords(data);
   }
 
-  async function handleSubmit(e) {
+async function handleSubmit(e) {
   e.preventDefault();
+  setLoading(true);
 
   let imageUrl = "";
   if (image) {
     const { data, error } = await supabase.storage
       .from("imagenes")
       .upload(`imagen-${Date.now()}.png`, image);
-
     if (!error) {
-      imageUrl = supabase.storage.from("imagenes").getPublicUrl(data.path).data.publicUrl;
+      imageUrl = supabase.storage
+        .from("imagenes")
+        .getPublicUrl(data.path).data.publicUrl;
     }
   }
 
-  const { error } = await supabase.from("registros").insert([
-    { texto: text, imagen: imageUrl }
-  ]);
+  const { error } = await supabase
+    .from("registros")
+    .insert([{ texto: text, imagen: imageUrl }]);
 
   if (!error) {
     setText("");
     setImage(null);
-    document.getElementById("file-input").value = ""; // <-- esto limpia el campo file
+    setPreview(null);
     fetchData();
   }
+
+  setLoading(false);
 }
+
 
 
 function generarPDF(record) {
@@ -102,7 +111,7 @@ function limpiarFormulario() {
 }
 
 
- return (
+return (
   <div className="p-4 max-w-xl mx-auto font-sans">
     <h1 className="text-2xl font-bold text-primary mb-4">Formulario</h1>
 
@@ -116,22 +125,55 @@ function limpiarFormulario() {
         required
       />
       <input
-        id="file-input"
         type="file"
         accept="image/*"
-        onChange={(e) => setImage(e.target.files[0])}
+        onChange={(e) => {
+          const file = e.target.files[0];
+          setImage(file);
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => setPreview(e.target.result);
+            reader.readAsDataURL(file);
+          } else {
+            setPreview(null);
+          }
+        }}
         className="w-full"
       />
+
+      {preview && (
+        <img src={preview} alt="Previsualización" className="w-32 mt-2 rounded" />
+      )}
+
       <div className="flex gap-2">
-        <button type="submit" className="bg-primary text-white px-4 py-2 rounded">
-          Guardar
+        <button
+          type="submit"
+          disabled={loading}
+          className={`px-4 py-2 rounded text-white ${
+            loading ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'
+          }`}
+        >
+          {loading ? "Guardando registro..." : "Guardar"}
         </button>
+
         <button
           type="button"
-          onClick={limpiarFormulario}
-          className="bg-gray-300 text-black px-4 py-2 rounded"
+          onClick={() => {
+            setText("");
+            setImage(null);
+            setPreview(null);
+          }}
+          className="bg-red-300 text-white px-4 py-2 rounded"
         >
           Limpiar
+        </button>
+
+        <button
+          type="button"
+          onClick={fetchData}
+          className="bg-blue-300 text-white px-4 py-2 rounded"
+        >
+          Refrescar
         </button>
       </div>
     </form>
@@ -140,22 +182,20 @@ function limpiarFormulario() {
     <ul className="space-y-2">
       {records.map((record) => (
         <li key={record.id} className="border p-2 rounded flex flex-col">
-          <span>
-            <strong>Texto:</strong> {record.texto}
-          </span>
+          <span><strong>Texto:</strong> {record.texto}</span>
           {record.imagen && (
-            <img src={record.imagen} alt="" className="w-32 mt-2" />
+            <img src={record.imagen} alt="" className="w-32 mt-2 rounded" />
           )}
           <div className="flex gap-2 mt-2">
             <button
-              className="bg-gray-200 px-2 py-1 rounded"
               onClick={() => generarPDF(record)}
+              className="bg-gray-200 px-2 py-1 rounded"
             >
               Generar PDF
             </button>
             <button
-              className="bg-red-400 text-white px-2 py-1 rounded"
-              onClick={() => handleDelete(record.id)}
+              onClick={() => borrarRegistro(record.id)}
+              className="bg-red-200 px-2 py-1 rounded"
             >
               Borrar
             </button>
@@ -166,6 +206,5 @@ function limpiarFormulario() {
   </div>
 );
 
-}
 
 export default App;
