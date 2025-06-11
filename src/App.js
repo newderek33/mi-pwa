@@ -49,24 +49,40 @@ function App() {
 }
 
 
-  function generarPDF(record) {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Registro", 10, 20);
-    doc.text(`Texto: ${record.texto}`, 10, 40);
+function generarPDF(record) {
+  const doc = new jsPDF();
 
-    if (record.imagen) {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.onload = () => {
-        doc.addImage(img, "PNG", 10, 50, 50, 50);
-        doc.save("registro.pdf");
-      };
-      img.src = record.imagen;
-    } else {
+  doc.setFontSize(16);
+  doc.text("Registro", 10, 20);
+  doc.text(`Texto: ${record.texto}`, 10, 40);
+
+  if (record.imagen) {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const maxWidth = 180; // mm
+      const maxHeight = 250; // mm
+      const imgWidth = img.width;
+      const imgHeight = img.height;
+
+      // Calcular proporciones
+      let width = maxWidth;
+      let height = (imgHeight / imgWidth) * width;
+
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = (imgWidth / imgHeight) * height;
+      }
+
+      doc.addImage(img, "PNG", 10, 50, width, height);
       doc.save("registro.pdf");
-    }
+    };
+    img.src = record.imagen;
+  } else {
+    doc.save("registro.pdf");
   }
+}
+
 
 
 async function handleDelete(id) {
