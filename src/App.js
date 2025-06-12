@@ -66,8 +66,9 @@ if (!error) {
   if (fileInputRef.current) fileInputRef.current.value = null;
   fetchData();
 } else {
-  console.error("Error guardando el registro:", error); // ← Añade esta línea
-  alert("Error guardando el registro.");
+  console.error("Error guardando el registro:", error);
+alert("Error guardando el registro: " + JSON.stringify(error));
+
 }
     setLoading(false);
   }
