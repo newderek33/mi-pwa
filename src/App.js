@@ -55,19 +55,20 @@ function App() {
       }
     }
 
-    const { error } = await supabase
-      .from("registros")
-      .insert([{ texto: text, imagen: imageUrl, imagen_path: imagePath }]);
+const { error } = await supabase
+  .from("registros")
+  .insert([{ texto: text, imagen: imageUrl, imagen_path: imagePath }]);
 
-    if (!error) {
-      setText("");
-      setImage(null);
-      setPreviewUrl(null);
-      if (fileInputRef.current) fileInputRef.current.value = null;
-      fetchData();
-    } else {
-      alert("Error guardando el registro.");
-    }
+if (!error) {
+  setText("");
+  setImage(null);
+  setPreviewUrl(null);
+  if (fileInputRef.current) fileInputRef.current.value = null;
+  fetchData();
+} else {
+  console.error("Error guardando el registro:", error); // ← Añade esta línea
+  alert("Error guardando el registro.");
+}
     setLoading(false);
   }
 
