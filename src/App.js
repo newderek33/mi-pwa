@@ -40,7 +40,6 @@ function App() {
     const { data, error } = await supabase
       .from("registros")
       .select("*")
-      .eq("usuario_id", user.id)
       .order("id", { ascending: false });
     if (!error) setRecords(data);
     setLoading(false);
