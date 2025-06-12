@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import jsPDF from "jspdf";
+
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -13,10 +14,19 @@ function App() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState([]);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  function handleClear() {
+  setText("");
+  setImage(null);
+  if (fileInputRef.current) {
+    fileInputRef.current.value = null; // limpia el campo de imagen visualmente
+  }
+}
 
   async function fetchData() {
     const { data, error } = await supabase.from("registros").select("*");
@@ -115,12 +125,14 @@ function App() {
           className="w-full p-2 border rounded"
           required
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="w-full"
-        />
+<input
+  type="file"
+  accept="image/*"
+  onChange={(e) => setImage(e.target.files[0])}
+  ref={fileInputRef}
+  className="w-full"
+/>
+
         {preview && (
           <img src={preview} alt="Preview" className="w-32 mt-2" />
         )}
