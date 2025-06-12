@@ -37,17 +37,21 @@ function App() {
     e.preventDefault();
     setLoading(true);
 
-    let imageUrl = "";
-    if (image) {
-      const { data, error } = await supabase.storage
-        .from("imagenes")
-        .upload(`imagen-${Date.now()}.png`, image);
-      if (!error) {
-        imageUrl = supabase.storage.from("imagenes").getPublicUrl(data.path).data.publicUrl;
-      }
-    }
+let imageUrl = "";
+let imagePath = "";
+if (image) {
+  const { data, error } = await supabase.storage
+    .from("imagenes")
+    .upload(`imagen-${Date.now()}.png`, image);
+  if (!error) {
+    imagePath = data.path;
+    imageUrl = supabase.storage.from("imagenes").getPublicUrl(data.path).data.publicUrl;
+  }
+}
 
-    const { error } = await supabase.from("registros").insert([{ texto: text, imagen: imageUrl }]);
+
+
+    const { error } = await supabase.from("registros").insert([{ texto: text, imagen: imageUrl, imagen_path: imagePath }]);
     if (!error) {
       setText("");
       setImage(null);
@@ -57,10 +61,13 @@ function App() {
     setLoading(false);
   }
 
-  async function handleDelete(id) {
-    const { error } = await supabase.from("registros").delete().eq("id", id);
-    if (!error) fetchData();
+async function handleDelete(id, imagenPath) {
+  if (imagenPath) {
+    await supabase.storage.from("imagenes").remove([imagenPath]);
   }
+  await supabase.from("registros").delete().eq("id", id);
+  fetchData();
+}
 
   function handleImageChange(e) {
     const file = e.target.files[0];
@@ -178,12 +185,12 @@ function App() {
               >
                 Generar PDF
               </button>
-              <button
-                className="bg-red-400 px-2 py-1 rounded text-white"
-                onClick={() => handleDelete(record.id)}
-              >
-                Borrar
-              </button>
+             <button
+  className="mt-2 bg-red-100 text-red-600 px-2 py-1 rounded"
+  onClick={() => handleDelete(record.id, record.imagen_path)}
+>
+  Borrar
+</button>
             </div>
           </li>
         ))}
