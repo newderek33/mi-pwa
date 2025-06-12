@@ -2,8 +2,11 @@ import React, { useRef, useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import jsPDF from "jspdf";
 import AuthForm from "./AuthForm";
+import ResetPassword from "./ResetPassword";
+import ConfirmAccount from "./ConfirmAccount";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-function App() {
+function MainApp() {
   const [user, setUser] = useState(null);
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
@@ -239,6 +242,18 @@ function App() {
         ))}
       </ul>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/confirm" element={<ConfirmAccount />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
