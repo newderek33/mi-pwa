@@ -15,7 +15,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState([]);
   const fileInputRef = useRef(null);
-  const [loading, setLoading] = useState(false);
   
 
   useEffect(() => {
@@ -58,7 +57,7 @@ if (image) {
     if (!error) {
       setText("");
       setImage(null);
-      setPreview(null);
+      setPreviewUrl(null);
       fetchData();
     }
     setLoading(false);
@@ -76,7 +75,7 @@ async function handleDelete(id, imagenPath) {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
-      setPreview(URL.createObjectURL(file));
+      setPreviewUrl(URL.createObjectURL(file));
     }
   }
 
@@ -197,7 +196,7 @@ async function handleDelete(id, imagenPath) {
             </button>
             <button
               className="bg-red-200 px-2 py-1 rounded"
-              onClick={() => handleDelete(record.id, record.imagen)}
+              onClick={() => handleDelete(record.id, record.imagen_path)}
             >
               Borrar
             </button>
