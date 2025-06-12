@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import jsPDF from "jspdf";
-
-const supabase = createClient('https://hiahkvlgtvirlshxmqep.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYWhrdmxndHZpcmxzaHhtcWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzI5NjQsImV4cCI6MjA2NDYwODk2NH0.nelAKJvgXnmA5PO2-N48SE1pM9vaU-yYJGJVTNrIho4');
+import AuthForm from "./AuthForm";
 
 function App() {
+  const [user, setUser] = useState(null);
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -12,9 +12,19 @@ function App() {
   const [records, setRecords] = useState([]);
   const fileInputRef = useRef(null);
 
+  // Verifica sesión de usuario
   useEffect(() => {
-    fetchData();
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener?.subscription?.unsubscribe?.();
   }, []);
+
+  // Carga registros solo del usuario actual
+  useEffect(() => {
+    if (user) fetchData();
+  }, [user]);
 
   function handleClear() {
     setText("");
@@ -26,9 +36,14 @@ function App() {
   }
 
   async function fetchData() {
-    const { data, error } = await supabase.from("registros").select("*");
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("registros")
+      .select("*")
+      .eq("usuario_id", user.id)
+      .order("id", { ascending: false });
     if (!error) setRecords(data);
-    // Puedes agregar manejo de errores aquí si lo deseas
+    setLoading(false);
   }
 
   async function handleSubmit(e) {
@@ -55,21 +70,18 @@ function App() {
       }
     }
 
-const { error } = await supabase
-  .from("registros")
-  .insert([{ texto: text, imagen: imageUrl, imagen_path: imagePath }]);
-
-if (!error) {
-  setText("");
-  setImage(null);
-  setPreviewUrl(null);
-  if (fileInputRef.current) fileInputRef.current.value = null;
-  fetchData();
-} else {
-  console.error("Error guardando el registro:", error);
-alert("Error guardando el registro: " + JSON.stringify(error));
-
-}
+    const { error } = await supabase
+      .from("registros")
+      .insert([{ texto: text, imagen: imageUrl, imagen_path: imagePath, usuario_id: user.id }]);
+    if (!error) {
+      setText("");
+      setImage(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = null;
+      fetchData();
+    } else {
+      alert("Error guardando el registro.");
+    }
     setLoading(false);
   }
 
@@ -141,9 +153,21 @@ alert("Error guardando el registro: " + JSON.stringify(error));
     }
   }
 
+  // Logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setRecords([]);
+  };
+
+  if (!user) return <AuthForm onAuth={fetchData} />;
+  
   return (
     <div className="p-4 max-w-xl mx-auto font-sans">
-      <h1 className="text-2xl font-bold text-primary mb-4">Formulario</h1>
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-2xl font-bold text-primary mb-4">Formulario</h1>
+        <button onClick={handleLogout} className="bg-red-600 text-white px-3 py-1 rounded">Salir</button>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
         <input
           type="text"
