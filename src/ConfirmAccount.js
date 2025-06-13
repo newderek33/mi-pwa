@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 export default function ConfirmAccount() {
+  const location = useLocation();
   const [message, setMessage] = useState("Verificando...");
 
   useEffect(() => {
-    setTimeout(() => {
+    // Lee el hash de la URL y crea un objeto con los parámetros
+    const params = new URLSearchParams(location.hash.replace("#", "?"));
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+    const type = params.get("type");
+
+    if (error) {
+      setMessage("Error al confirmar tu correo: " + (errorDescription || error));
+    } else if (type === "signup") {
       setMessage("¡Tu correo ha sido confirmado! Ya puedes iniciar sesión.");
-    }, 2000);
-  }, []);
+    } else {
+      setMessage("Confirmación procesada. Ya puedes iniciar sesión.");
+    }
+  }, [location]);
 
   return (
     <div className="max-w-xs mx-auto mt-12 p-6 bg-white rounded shadow">
